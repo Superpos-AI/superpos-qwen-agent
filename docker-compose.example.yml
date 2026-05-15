@@ -1,0 +1,26 @@
+services:
+  agent1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: slim-qwen-agent:local
+    env_file:
+      - .env.agent1
+    volumes:
+      - qwen_home_1:/home/agent/.qwen
+    restart: unless-stopped
+
+  agent2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: slim-qwen-agent:local
+    env_file:
+      - .env.agent2
+    volumes:
+      - qwen_home_2:/home/agent/.qwen
+    restart: unless-stopped
+
+volumes:
+  qwen_home_1:
+  qwen_home_2:
