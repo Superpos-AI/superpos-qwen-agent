@@ -24,7 +24,7 @@ pip install -e .
 python -m slim_agent_qwen
 ```
 
-If you're hacking on `slim-agent-core` in a sibling directory and want your changes picked up without re-pushing, uncomment the `[tool.uv.sources]` block in `pyproject.toml` (or `pip install -e ../slim-agent-core` first).
+If you're hacking on `superpos-agent-core` in a sibling directory and want your changes picked up without re-pushing, uncomment the `[tool.uv.sources]` block in `pyproject.toml` (or `pip install -e ../superpos-agent-core` first).
 
 ## Auth modes
 
