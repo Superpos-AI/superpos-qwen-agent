@@ -46,7 +46,7 @@ from pathlib import Path
 
 import httpx
 
-from slim_agent_core import (
+from superpos_agent_core import (
     Executor,
     ExecutionRequest,
     RecentTasksLog,

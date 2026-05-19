@@ -41,7 +41,7 @@ EOF
 fi
 
 # Run module setup (install deps, update QWEN.md)
-python3 -m slim_agent_core.module_setup \
+python3 -m superpos_agent_core.module_setup \
     --modules-dir /workspace/.qwen/modules \
     --agents-md /workspace/QWEN.md \
     || echo "Warning: module setup failed"

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from slim_agent_core import run_agent
+from superpos_agent_core import run_agent
 
 from .config import QwenConfig
 from .qwen_executor import QwenExecutor
