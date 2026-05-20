@@ -1,7 +1,7 @@
 # superpos-agent-core is the shared runtime — pulled from GitHub so this repo
 # can build standalone.  Pin to a specific commit/tag for reproducible
 # builds; @main is fine during active development.
-superpos-agent-core @ git+https://github.com/Superpos-AI/superpos-agent-core.git@feat/stop-command
+superpos-agent-core @ git+https://github.com/Superpos-AI/superpos-agent-core.git@505b443
 
 # Transitive deps of superpos-agent-core listed here for IDE/lockfile clarity.
 python-telegram-bot>=21.0
