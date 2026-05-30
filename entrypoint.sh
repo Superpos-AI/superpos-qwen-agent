@@ -40,10 +40,16 @@ EOF
     fi
 fi
 
-# Run module setup (install deps, update QWEN.md)
+# Run module setup (install deps, update QWEN.md, symlink bundled +
+# workspace module scripts onto PATH).  --bin-dir must match the
+# directory the Dockerfile prepends to $PATH (/workspace/.qwen/modules-bin);
+# without it, bundled CLIs like superpos-issues / superpos-workflows are
+# advertised in QWEN.md but unreachable from the shell.
+mkdir -p /workspace/.qwen/modules-bin
 python3 -m superpos_agent_core.module_setup \
     --modules-dir /workspace/.qwen/modules \
     --agents-md /workspace/QWEN.md \
+    --bin-dir /workspace/.qwen/modules-bin \
     || echo "Warning: module setup failed"
 
 exec "$@"
