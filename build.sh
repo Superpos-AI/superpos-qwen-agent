@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build the slim-qwen-agent image locally.
-# Run from the Slim-Agent-Qwen/ directory.
+# Run from the Superpos-Agent-Qwen/ directory.
 
 set -e
 

@@ -1,4 +1,4 @@
-"""Slim-Agent-Qwen entry point — wires QwenExecutor into the core orchestrator."""
+"""Superpos-Agent-Qwen entry point — wires QwenExecutor into the core orchestrator."""
 
 from __future__ import annotations
 

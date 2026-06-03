@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from slim_agent_qwen import QwenConfig, QwenExecutor, QwenRuntimeConfig
+from superpos_agent_qwen import QwenConfig, QwenExecutor, QwenRuntimeConfig
 
 
 def _make_executor(model: str, effort: str) -> QwenExecutor:
@@ -24,9 +24,9 @@ def _make_executor(model: str, effort: str) -> QwenExecutor:
     # discovery) — none of that is relevant to model_info().
     with (
         patch.object(QwenExecutor, "_inject_persona_into_qwen_md"),
-        patch("slim_agent_qwen.qwen_executor.SessionStore"),
-        patch("slim_agent_qwen.qwen_executor.discover_modules", return_value=[]),
-        patch("slim_agent_qwen.qwen_executor.collect_mcp_servers", return_value={}),
+        patch("superpos_agent_qwen.qwen_executor.SessionStore"),
+        patch("superpos_agent_qwen.qwen_executor.discover_modules", return_value=[]),
+        patch("superpos_agent_qwen.qwen_executor.collect_mcp_servers", return_value={}),
         patch("pathlib.Path.mkdir"),
     ):
         return QwenExecutor(

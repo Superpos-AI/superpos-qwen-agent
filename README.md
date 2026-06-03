@@ -1,4 +1,4 @@
-# Slim-Agent-Qwen
+# Superpos-Agent-Qwen
 
 Superpos slim agent backed by [Alibaba's Qwen Code CLI](https://github.com/QwenLM/qwen-code).
 
@@ -21,7 +21,7 @@ docker compose up --build
 
 ```bash
 pip install -e .
-python -m slim_agent_qwen
+python -m superpos_agent_qwen
 ```
 
 If you're hacking on `superpos-agent-core` in a sibling directory and want your changes picked up without re-pushing, uncomment the `[tool.uv.sources]` block in `pyproject.toml` (or `pip install -e ../superpos-agent-core` first).
@@ -35,4 +35,4 @@ If you're hacking on `superpos-agent-core` in a sibling directory and want your 
 
 ## Status
 
-Qwen Code CLI is a Gemini CLI fork, so the executor reuses the Gemini event-parsing patterns directly.  If a new Qwen release changes flag names or event shapes, check `src/slim_agent_qwen/qwen_executor.py` — the JSONL extractor is the most likely place to need a tweak.
+Qwen Code CLI is a Gemini CLI fork, so the executor reuses the Gemini event-parsing patterns directly.  If a new Qwen release changes flag names or event shapes, check `src/superpos_agent_qwen/qwen_executor.py` — the JSONL extractor is the most likely place to need a tweak.

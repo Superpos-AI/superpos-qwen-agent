@@ -1,4 +1,4 @@
-"""Slim-agent runtime backed by Alibaba's Qwen Code CLI."""
+"""Superpos agent runtime backed by Alibaba's Qwen Code CLI."""
 
 from .config import QwenConfig
 from .qwen_executor import QwenExecutor
