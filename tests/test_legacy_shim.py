@@ -52,6 +52,32 @@ def test_legacy_exposes_new_package_attributes():
         )
 
 
+def test_legacy_submodules_import_and_alias_new_package():
+    """``import slim_agent_qwen.<sub>`` works and aliases the new submodule.
+
+    Python does not route submodule imports through a package's
+    ``__getattr__``, so each legacy submodule needs an explicit forwarding
+    stub.  These should resolve to the *same* module object as the new
+    package's equivalents so attribute identity is preserved.
+    """
+    submodules = ("config", "qwen_executor", "runtime_config")
+
+    # Drop any cached entries so the import machinery runs fresh.
+    for name in list(sys.modules):
+        if name == "slim_agent_qwen" or name.startswith("slim_agent_qwen."):
+            del sys.modules[name]
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        for sub in submodules:
+            legacy = importlib.import_module(f"slim_agent_qwen.{sub}")
+            new = importlib.import_module(f"superpos_agent_qwen.{sub}")
+            assert legacy is new, (
+                f"slim_agent_qwen.{sub} should be the same module object as "
+                f"superpos_agent_qwen.{sub}"
+            )
+
+
 def test_legacy_main_module_forwards_to_new_entrypoint():
     """``python -m slim_agent_qwen`` loads the new package's ``cli`` callable."""
     # Use runpy with a sentinel run_name so the module's ``if __name__ ==
