@@ -1163,7 +1163,7 @@ _AUTH_HELP_INVALID_KEY = """
 ║                                                              ║
 ║    docker run -it \\                                          ║
 ║      -v qwen_auth:/home/agent/.qwen \\                        ║
-║      --entrypoint qwen slim-qwen-agent auth login            ║
+║      --entrypoint qwen superpos-qwen-agent auth login        ║
 ║                                                              ║
 ║    Follow the prompts to authenticate.                       ║
 ║    Then restart the agent (keep the -v flag).                ║

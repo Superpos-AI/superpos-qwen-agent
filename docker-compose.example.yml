@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: slim-qwen-agent:local
+    image: superpos-qwen-agent:local
     env_file:
       - .env.agent1
     volumes:
@@ -14,7 +14,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: slim-qwen-agent:local
+    image: superpos-qwen-agent:local
     env_file:
       - .env.agent2
     volumes:
