@@ -1,6 +1,6 @@
 """Smoke tests: verify the package is importable and core classes are available."""
 
-from slim_agent_qwen import QwenConfig, QwenExecutor, QwenRuntimeConfig
+from superpos_agent_qwen import QwenConfig, QwenExecutor, QwenRuntimeConfig
 
 
 def test_package_importable():

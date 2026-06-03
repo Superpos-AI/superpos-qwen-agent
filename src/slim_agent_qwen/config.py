@@ -1,40 +1,19 @@
-"""Qwen-specific config: extends BaseConfig with Qwen API key + base URL + model."""
+"""Legacy shim — forwards to :mod:`superpos_agent_qwen.config`.
+
+Python does not route submodule imports through the parent package's
+``__getattr__``, so ``import slim_agent_qwen.config`` would otherwise fail
+even though ``slim_agent_qwen`` itself is importable.  This stub keeps the
+old import path alive by re-exporting the new module's public surface and
+registering itself as an alias in :data:`sys.modules`.
+"""
 
 from __future__ import annotations
 
-import os
-from dataclasses import dataclass
+import sys as _sys
 
-from superpos_agent_core import BaseConfig
+from superpos_agent_qwen import config as _target
+from superpos_agent_qwen.config import *  # noqa: F401,F403
 
-
-@dataclass
-class QwenConfig(BaseConfig):
-    """Adds Qwen Code CLI-specific knobs on top of the universal BaseConfig."""
-
-    qwen_api_key: str = ""
-    qwen_base_url: str = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-    qwen_model: str = "qwen3-coder-plus"
-    qwen_reasoning_effort: str = "medium"  # low|medium|high
-
-    def __post_init__(self) -> None:
-        if not self.executor_kind or self.executor_kind == "generic":
-            self.executor_kind = "qwen"
-        super().__post_init__()
-
-    @classmethod
-    def from_env(cls) -> "QwenConfig":
-        base = cls._base_env_kwargs()
-        base.update(
-            executor_kind="qwen",
-            qwen_api_key=os.environ.get("QWEN_API_KEY", ""),
-            qwen_base_url=os.environ.get(
-                "QWEN_BASE_URL",
-                "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-            ),
-            qwen_model=os.environ.get("QWEN_MODEL", "qwen3-coder-plus"),
-            qwen_reasoning_effort=os.environ.get("QWEN_REASONING_EFFORT", "medium"),
-        )
-        if os.environ.get("QWEN_MAX_TURNS"):
-            base["executor_max_turns"] = int(os.environ["QWEN_MAX_TURNS"])
-        return cls(**base)
+# Alias the new module under the legacy dotted name so that
+# ``slim_agent_qwen.config is superpos_agent_qwen.config``.
+_sys.modules[__name__] = _target
