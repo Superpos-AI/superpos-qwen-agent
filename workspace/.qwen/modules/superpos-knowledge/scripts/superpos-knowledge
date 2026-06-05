@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""CLI wrapper around superpos_agent_core.SuperposClient knowledge read methods.
+"""CLI wrapper around superpos_agent_core.SuperposClient knowledge methods.
 
 Subcommands mirror the client API:
-  search, get, list, graph, topics, decisions
+  search, get, list, graph, topics, decisions   (read)
+  create, update                                 (bounded write)
 
 Prints JSON to stdout, errors to stderr.  Designed for the LLM to call
 via Bash and pipe through ``jq`` for follow-up queries.
 
-Read-only.  Writes happen via the ``knowledge_fillin`` task type, not here.
+Writes are *bounded*: every created/updated entry is stamped with
+``metadata.source = "agent_inline"`` so the Curator can audit and decay
+inline-authored knowledge.  Org-scope writes remain gated server-side by
+the ``knowledge.write_organization`` permission.
 """
 
 from __future__ import annotations
@@ -50,6 +54,56 @@ def _config_from_env() -> BaseConfig:
 def _print(value: Any) -> None:
     """Print a JSON-serialisable value, indented for human reading."""
     print(json.dumps(value, indent=2, default=str))
+
+
+def _parse_json_arg(label: str, raw: str | None) -> dict[str, Any] | None:
+    """Parse a CLI flag value that should be a JSON object, with a clear error."""
+    if raw is None:
+        return None
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError as e:
+        print(f"Error: --{label} must be valid JSON ({e})", file=sys.stderr)
+        sys.exit(2)
+    if not isinstance(parsed, dict):
+        print(f"Error: --{label} must be a JSON object, got {type(parsed).__name__}",
+              file=sys.stderr)
+        sys.exit(2)
+    return parsed
+
+
+def _build_value(args: argparse.Namespace) -> dict[str, Any]:
+    """Assemble the canonical knowledge ``value`` dict from CLI flags.
+
+    ``--value`` (raw JSON) is the escape hatch / base; the structured flags
+    override individual fields on top of it.  Provenance metadata is always
+    stamped so inline writes are auditable.
+    """
+    value: dict[str, Any] = _parse_json_arg("value", args.value) or {}
+
+    if args.title:
+        value["title"] = args.title
+    if args.summary:
+        value["summary"] = args.summary
+    if args.content:
+        value["content"] = args.content
+    if args.tags:
+        value["tags"] = [t.strip() for t in args.tags.split(",") if t.strip()]
+    if args.confidence:
+        value["confidence"] = args.confidence
+
+    meta = value.get("metadata")
+    if not isinstance(meta, dict):
+        meta = {}
+    meta["source"] = "agent_inline"
+    meta["auto_generated"] = True
+    value["metadata"] = meta
+    return value
+
+
+def _default_scope(explicit: str | None) -> str:
+    """Resolve the write scope: explicit flag → fillin default env → ``hive``."""
+    return explicit or os.environ.get("SUPERPOS_KNOWLEDGE_FILLIN_SCOPE", "hive")
 
 
 async def _run(args: argparse.Namespace) -> int:
@@ -96,6 +150,41 @@ async def _run(args: argparse.Namespace) -> int:
         elif args.cmd == "decisions":
             _print(await client.knowledge_decisions())
 
+        elif args.cmd == "create":
+            _print(await client.create_knowledge(
+                key=args.key,
+                value=_build_value(args),
+                scope=_default_scope(args.scope),
+                visibility=args.visibility,
+                ttl=args.ttl,
+            ))
+
+        elif args.cmd == "update":
+            has_individual_flags = any(
+                getattr(args, f, None) is not None
+                for f in ("title", "summary", "content", "tags", "confidence")
+            )
+            if args.value and not has_individual_flags:
+                # Full replacement: --value without individual field flags
+                final = _build_value(args)
+            else:
+                # Partial update: read-modify-write merge
+                existing = await client.get_knowledge(args.entry_id)
+                existing_value = existing.get("value", {}) if isinstance(existing, dict) else {}
+                if not isinstance(existing_value, dict):
+                    existing_value = {}
+                partial = _build_value(args)
+                final = {**existing_value, **partial}
+                existing_meta = existing_value.get("metadata", {})
+                if isinstance(existing_meta, dict) and isinstance(partial.get("metadata"), dict):
+                    final["metadata"] = {**existing_meta, **partial["metadata"]}
+            _print(await client.update_knowledge(
+                args.entry_id,
+                value=final,
+                visibility=args.visibility,
+                ttl=args.ttl,
+            ))
+
         else:
             print(f"Unknown subcommand: {args.cmd}", file=sys.stderr)
             return 2
@@ -105,12 +194,38 @@ async def _run(args: argparse.Namespace) -> int:
         await client.close()
 
 
+def _add_value_flags(p: argparse.ArgumentParser, *, require_content: bool) -> None:
+    """Shared value-shaping flags for create/update."""
+    p.add_argument(
+        "--content", required=require_content,
+        help="Entry body. Prefer the shape 'Rule: …  Why: …  How to apply: …'",
+    )
+    p.add_argument("--title", help="Short headline for the entry")
+    p.add_argument("--summary", help="One-line summary (shown in search results)")
+    p.add_argument("--tags", help="Comma-separated tags")
+    p.add_argument(
+        "--confidence", choices=["high", "medium", "low"],
+        help="Confidence level for this entry",
+    )
+    p.add_argument(
+        "--visibility", choices=["public", "private"],
+        help="Override visibility (defaults server-side by scope)",
+    )
+    p.add_argument("--ttl", help="ISO8601 expiry timestamp (entry auto-expires after)")
+    p.add_argument(
+        "--value",
+        help="Raw JSON object for the full value (escape hatch; structured "
+             "flags override fields on top of it)",
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="superpos-knowledge",
         description=(
-            "Read the Superpos knowledge store: FTS/semantic search, list, "
-            "get, graph traversal, topic & decision indexes."
+            "Read and write the Superpos knowledge store: FTS/semantic search, "
+            "list, get, graph traversal, topic & decision indexes, plus bounded "
+            "create/update for recording lasting decisions."
         ),
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -158,6 +273,25 @@ def _build_parser() -> argparse.ArgumentParser:
     # topics / decisions
     sub.add_parser("topics", help="Convenience index of topic clusters in this hive")
     sub.add_parser("decisions", help="Convenience index of recorded decisions")
+
+    # create
+    p_create = sub.add_parser(
+        "create", help="Record a new lasting knowledge entry (bounded write)",
+    )
+    p_create.add_argument("--key", required=True, help="Stable key, e.g. 'decisions:eventbus-unification'")
+    p_create.add_argument(
+        "--scope",
+        help="Scope (default: SUPERPOS_KNOWLEDGE_FILLIN_SCOPE env or 'hive'). "
+             "Org scope needs the knowledge.write_organization permission.",
+    )
+    _add_value_flags(p_create, require_content=True)
+
+    # update
+    p_update = sub.add_parser(
+        "update", help="Replace an existing entry's value (bumps version)",
+    )
+    p_update.add_argument("entry_id", help="Knowledge entry ULID to update")
+    _add_value_flags(p_update, require_content=False)
 
     return parser
 

@@ -1,4 +1,4 @@
-description: "Read and query the Superpos knowledge store — FTS / semantic search, list, get, graph traversal, topic & decision indexes"
+description: "Read and write the Superpos knowledge store — FTS / semantic search, list, get, graph traversal, topic & decision indexes, plus bounded create/update for recording lasting decisions inline."
 env:
   - SUPERPOS_BASE_URL
   - SUPERPOS_HIVE_ID
