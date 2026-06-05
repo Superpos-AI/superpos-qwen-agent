@@ -17,8 +17,8 @@ RUN npm install -g @qwen-code/qwen-code
 
 WORKDIR /app
 
-# superpos-agent-core is pulled directly from GitHub via requirements.txt
-# (the `git+https://…` line), so no parent-directory build context required.
+# superpos-agent-core is installed from PyPI via requirements.txt, so no
+# parent-directory build context is required.
 COPY requirements.txt .
 RUN pip install --no-cache-dir --break-system-packages -r requirements.txt
 
