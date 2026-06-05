@@ -1,6 +1,8 @@
-# superpos-agent-core is the shared runtime — pulled from GitHub so this repo
-# can build standalone.  Pin to a specific commit/tag for reproducible
-# builds; @main is fine during active development.
+# superpos-agent-core is the shared runtime — installed from PyPI so this repo
+# can build standalone.  Compatible-release pinned so patch updates are picked
+# up automatically.  Minimum is 0.1.2: entrypoint.sh calls the github_auth
+# module introduced in that release, and bumping this line also invalidates the
+# cached pip-install layer so a stale pre-0.1.2 core can't survive a rebuild.
 superpos-agent-core~=0.1.2
 
 # Transitive deps of superpos-agent-core listed here for IDE/lockfile clarity.
